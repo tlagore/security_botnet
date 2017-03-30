@@ -1,15 +1,17 @@
 import socket
 import time
 import threading
-
+import random
 
 class Bot:
-    def __init__(self, server, name, channel, port):
+    def __init__(self, server, channel, port):
         """ """
         self._server = server
-        self._nick = name
         self._channel = channel
         self._port = port
+        self._nick = ""
+        
+        self.pickNewName()
 
         self._socket = socket.socket()
         self._socket.connect((server, port))
@@ -84,12 +86,20 @@ class Bot:
 
     def pickNewName(self):
         """ set new name """
+        first = ["commander", "prince", "princess", "lord", "king", "queen", "mr", "keeper", "warden", "governor", "mayor", "president"]
+        middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey"]
+        last = ["toes", "fingers", "chef", "herder", "chop", "shepherd", "buns", "pickle", "fiend", "burger", "milk", "juice"]
+
+        firstInd = random.randint(0, len(first) - 1)
+        middleInd = random.randint(0, len(middle) - 1)
+        lastInd = random.randint(0, len(last) - 1)
+
         #change this to a new server
-        self._name = "butts"
+        self._nick = first[firstInd] + "_" + middle[middleInd] + "_" + last[lastInd]
 
 
 if __name__ == "__main__":
-    bot = Bot("127.0.0.1", "tyrone", "#channel1", 6667)
+    bot = Bot("127.0.0.1", "#channel1", 6667)
 
 
 '''
