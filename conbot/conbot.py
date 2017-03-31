@@ -40,12 +40,13 @@ class ConBot:
         return prefix, command, args
 
     def logSend(self, msg):
-        print("sending: {}".format(msg).encode("utf-8"))
+        msg = bytes(msg)
+        print("--> sending: " + str(msg))
         self._socket.send(msg)
 
     def logRecv(self):
         response = self._socket.recv(1024).decode("utf-8")
-        print("received: {}".format(response).encode("utf-8"))
+        print("<-- received: " + str(response))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
@@ -78,17 +79,14 @@ class ConBot:
                     self.logSend("PONG {}\r\n".format(args[0].encode("utf-8")))
                 elif command == "433":
                     #username taken
-                    self.pickNewName()
+                    self._nick = self._nick + str(randomint(1, 1000))
                     self.initConnection()
-            
+                  
 
             responses = self.logRecv()
 
-    def pickNewName(self):
-        """ set new name """
-        #change this to a new server
-        self._name = "butts"
-        
+    
+
 if __name__ == "__main__":
 
     if len(sys.argv) != 5:
