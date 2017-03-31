@@ -126,7 +126,7 @@ class Bot:
             self.initConnection()
 
             responses = self.logRecv()
-            while len(responses) > 1 and self._shutdown != True:
+            while len(responses) > 0 and self._shutdown != True:
                 for response in responses:
                     prefix, command, args = self.parsemsg(response)
                     
@@ -147,14 +147,16 @@ class Bot:
                         msg = args[1]
 
                         msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heard that fella").encode('utf-8')
-                        self._logSend(msg)
-                    elif command == "ERROR":
+                        self.logSend(msg)
+                    elif command == "ERROR":                        
                         eprint("!! Server sent error, could be connecting too quick, wait 10 seconds..")
                         sys.stdout.flush()
                         time.sleep(10)
             
-
                 responses = self.logRecv()
+
+            print("Exitted loop for some reason.......")
+            print("{0}".format(responses))
         except KeyboardInterrupt:
             #in case we'd like
             raise
@@ -182,7 +184,7 @@ class Bot:
         will suffice
         """
         first = ["commander", "prince", "princess", "lord", "king", "queen", "mr", "keeper", "warden", "governor", "mayor", "president"]
-        middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey", "pork"]
+        middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey", "pork", "of"]
         last = ["toes", "fingers", "chef", "herder", "chop", "shepherd", "buns", "pickle", "fiend", "burger", "milk", "juice"]
 
         firstInd = random.randint(0, len(first) - 1)
