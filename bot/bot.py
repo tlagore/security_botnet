@@ -48,6 +48,7 @@ class Bot:
             finally:
                 if connected != True:
                     eprint("!! Error connecting. Trying again in 5 seconds.")
+                    sys.stdout.flush()
                     time.sleep(5)
                     
 
@@ -149,6 +150,7 @@ class Bot:
                         self._logSend(msg)
                     elif command == "ERROR":
                         eprint("!! Server sent error, could be connecting too quick, wait 10 seconds..")
+                        sys.stdout.flush()
                         time.sleep(10)
             
 
@@ -161,6 +163,7 @@ class Bot:
             print("Error encountered: ")
             print(traceback.format_exc())
             print("Waiting 10 seconds before reconnect...")
+            sys.stdout.flush()
             time.sleep(10)
             pass
 
