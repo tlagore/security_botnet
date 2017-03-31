@@ -4,10 +4,17 @@ import threading
 import random
 import sys
 import traceback
+import time
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+class colors:
+    OAKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    
 class Bot:
     def __init__(self, server, channel, port, secret):
         """ """
@@ -16,21 +23,37 @@ class Bot:
         self._port = port
         self._nick = ""
         self._secret = secret
+        self._shutdown = False
         
         self.pickNewName()
-
+        
         try: 
-            self._socket = socket.socket()
-            self._socket.connect((server, port))
-
-            eprint("!! Connected to server {0} on port {1}".format(server, port))
-            eprint("!! Bot attempting to register for server with nickname {0}".format(self._nick))
-            
-            self.doWork()
+            self.connectAndRun()
         except:
-            eprint("!! Error connecting to channel {0} server {1} on port {2}".format(self._channel, self._server, self._port))
             eprint(traceback.format_exc())
 
+    def connectAndRun(self):
+        """ 
+        initializes a new socket and attempts to connect to the server/port combination
+        """
+        self._socket = socket.socket()
+        
+        connected = False
+        while connected != True:
+            try:
+                eprint("!! Attempting to connect...")
+                self._socket.connect((self._server, self._port))
+                connected = True
+                eprint("!! Connected to server {0} on port {1}".format(self._server, self._port))
+            finally:
+                if connected != True:
+                    eprint("!! Error connecting. Trying again in 5 seconds.")
+                    time.sleep(5)
+                    
+
+        self.doWork()
+    
+             
             
     def parsemsg(self, s):
         """Breaks a message from an IRC server into its prefix, command, and arguments.
@@ -56,8 +79,9 @@ class Bot:
         """
         sends a given message and logs what message was sent to stdout
         """
+
         msg = bytes(msg)
-        print("--> sending: {0}".format(msg))
+        print("--> sending: {0}{1}{2}".format(colors.OAKGREEN, msg, colors.ENDC))
         self._socket.send(msg)
         
     def logRecv(self):
@@ -80,11 +104,7 @@ class Bot:
         joining the specified channel.
         """
         self.logSend("NICK {}\r\n".format(self._nick).encode("utf-8"))
-
-        ##change this to be a randomized name per bot, note nick is their identifying feature,
-        ## not the name
         self.logSend("USER {0} 0 * :{1}\r\n".format(self._nick, self._nick).encode("utf-8"))
-        self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
 
     def debugLogResponse(self, prefix, command, args):
         """ 
@@ -100,25 +120,54 @@ class Bot:
         Handles the receive/response loop by introducing the bot to the server, then handles
         responses to basic commands
         """
-        self.initConnection()
-
-        responses = self.logRecv()
-        while responses:
-            for response in responses:
-                prefix, command, args = self.parsemsg(response)
-
-                self.debugLogResponse(prefix, command, args)
-                
-                if command == "PING":
-                    self.logSend("PONG {0}\r\n".format(args[0]).encode("utf-8"))
-                elif command == "433":
-                    #username taken
-                    self.pickNewName()
-                    self.initConnection()
-            
+        try:
+            print("What the fuck");
+            self.initConnection()
 
             responses = self.logRecv()
+            while len(responses) > 1 and self._shutdown != True:
+                for response in responses:
+                    prefix, command, args = self.parsemsg(response)
+                    
+                    self.debugLogResponse(prefix, command, args)
+                    
+                    if command == "PING":
+                        self.logSend("PONG {0}\r\n".format(args[0]).encode("utf-8"))
+                    elif command == "004":
+                        #registration complete - join channel
+                        self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
+                    elif command == "433":
+                        #username taken
+                        self.pickNewName()
+                        self.initConnection()
+                    elif command == "PRIVMSG":
+                        sender = prefix
+                        channel = args[0]
+                        msg = args[1]
 
+                        msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heard that fella").encode('utf-8')
+                        self._logSend(msg)
+                    elif command == "ERROR":
+                        eprint("!! Server sent error, could be connecting too quick, wait 10 seconds..")
+                        time.sleep(10)
+            
+
+                responses = self.logRecv()
+        except KeyboardInterrupt:
+            #in case we'd like
+            raise
+        except:
+            #other exception, continue to reconnect
+            print("Error encountered: ")
+            print(traceback.format_exc())
+            print("Waiting 10 seconds before reconnect...")
+            time.sleep(10)
+            pass
+
+        #if we haven't received the shutdown command, boot 'er back up
+        if not self._shutdown:
+            self.connectAndRun()
+                
     def pickNewName(self):
         """ 
         set a new name for the bot. Called on startup and repeatedly if name is taken.

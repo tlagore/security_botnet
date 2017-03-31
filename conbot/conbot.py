@@ -2,6 +2,7 @@ import sys
 import socket
 import time
 import threading
+import traceback
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -11,12 +12,13 @@ class ConBot:
         self._server = server
         #need to generate nick
         self._nick = name
-        self._channel = channel
-        self._port = port
-        
+        self._channel = '#' + channel
+        self._port = port        
         self._secret = secret
+        self._running = True
 
         self._socket = socket.socket()
+        self._socket.settimeout(5)
         self._socket.connect((server, port))
 
     def parsemsg(self, s):
@@ -56,8 +58,8 @@ class ConBot:
         ##change this to be a randomized name per bot, note nick is their identifying feature,
         ## not the name
         self.logSend("USER {0} 0 * :{1}\r\n".format(self._nick, self._nick).encode("utf-8"))
-        self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
-
+        #self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
+        
     def debugLogResponse(self, prefix, command, args):
         """ """
         print("prefix: {0}".format(prefix))
@@ -66,25 +68,76 @@ class ConBot:
 
     def doWork(self):
         """ """
-        self.initConnection()
-
-        responses = self.logRecv()
-        while responses:
-            for response in responses:
-                prefix, command, args = self.parsemsg(response)
-
-                self.debugLogResponse(prefix, command, args)
-                
-                if command == "PING":
-                    self.logSend("PONG {}\r\n".format(args[0]).encode("utf-8"))
-                elif command == "433":
-                    #username taken
-                    self._nick = self._nick + str(randomint(1, 1000))
-                    self.initConnection()
-                  
+        try:
+            self.initConnection()
 
             responses = self.logRecv()
+            while self._running or len(responses) > 0:
+                for response in responses:
+                    prefix, command, args = self.parsemsg(response)
 
+                    self.debugLogResponse(prefix, command, args)
+                
+                    if command == "PING":
+                        self.logSend("PONG {}\r\n".format(args[0]).encode("utf-8"))
+                    elif command == "004":
+                        #registration complete join channel
+                        self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
+                    elif command == "433":
+                        #username taken
+                        self._nick = self._nick + str(randomint(1, 1000))
+                        self.initConnection()
+                try:
+                    responses = self.logRecv()
+                except socket.timeout:
+                    responses = []
+                    #do nothing, if we were shutdown - running is set to false
+                    #otherwise it was a normal socket read timeout to prevent locking
+                    pass
+                    
+        except:
+            print("!! response loop ending")
+            print(traceback.format_exc())
+
+    def status(self):
+        msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "hello").encode('utf-8')
+        self.logSend(msg)
+
+    def shutdown(self):
+        self._running = False
+        self._socket.send("KILL".encode("utf-8"))
+
+    def __del__(self):
+        try:
+            socket.close()    
+        except:
+            eprint("Error closing socket, might not have been initialized")
+
+def handleCommands(controller):
+    """
+    
+    """
+    command = sys.stdin.readline()
+    while command != '':
+        command = command.strip("\r\n")
+
+        if command == "status":
+            print("status!")
+            controller.status()
+        elif command == "attack":
+            print("attack!")
+        elif command == "quit":            
+            print("quit!")
+            controller.shutdown()
+            break;
+        elif command == "shutdown":
+            print("shutdown!")
+            controller.shutdown()
+            break;
+        else:
+            print("Invalid command!");
+        
+        command=sys.stdin.readline()
     
 
 if __name__ == "__main__":
@@ -93,13 +146,26 @@ if __name__ == "__main__":
         eprint("Invalid usage. Usage: ")
         eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase>")
     else:
+        try:
+            host = sys.argv[1]
+            name = "leeroy_jenkins"
+            port = int(sys.argv[2])
+            chan = sys.argv[3]
+            secret = sys.argv[4]
 
-        host = sys.argv[1]
-        name = "leeroy_jenkins"
-        port = sys.argv[2]
-        chan = sys.argv[3]
-        secret = sys.argv[4]
+            controller = ConBot(host, "leeroy_jenkins", chan, port, secret)
+            conbot = threading.Thread(target=controller.doWork, args=())
+            conbot.start()
 
-        bot = ConBot("172.19.2.91", "leeroy_jenkins", "#channel1", 6667, secret)
-        bot.doWork()
-        eprint("Shutting Down...")
+            handleCommands(controller)
+
+            print(conbot.isAlive())
+            
+            conbot.join()
+        except ValueError:
+            eprint("Invalid port number. Port must be from 1-65535")
+        except:
+            eprint("An error occured. Please ensure valid parameters")
+            eprint(traceback.format_exc())
+        finally:
+            eprint("Shutting Down...")
