@@ -122,7 +122,6 @@ class Bot:
         responses to basic commands
         """
         try:
-            print("What the fuck");
             self.initConnection()
 
             responses = self.logRecv()
