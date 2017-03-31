@@ -76,7 +76,7 @@ class ConBot:
                 self.debugLogResponse(prefix, command, args)
                 
                 if command == "PING":
-                    self.logSend("PONG {}\r\n".format(args[0].encode("utf-8")))
+                    self.logSend("PONG {}\r\n".format(args[0]).encode("utf-8"))
                 elif command == "433":
                     #username taken
                     self._nick = self._nick + str(randomint(1, 1000))
