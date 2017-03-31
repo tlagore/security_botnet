@@ -53,17 +53,32 @@ class Bot:
         return prefix, command, args
 
     def logSend(self, msg):
+        """
+        sends a given message and logs what message was sent to stdout
+        """
         msg = bytes(msg)
-        print("--> sending: " + str(msg))
+        print("--> sending: {0}".format(msg))
         self._socket.send(msg)
         
     def logRecv(self):
+        """
+        receives a message and logs the message that was received to stdout.
+        assumes that messages are delimited by \r\n as per irc protocol.
+
+        If multiple messages are received, it will return an array of the commands
+        
+        If only one message is received, the array will be of size 1
+        """
         response = self._socket.recv(1024).decode("utf-8")
         print("<-- received: " + str(response))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
     def initConnection(self):
+        """
+        Initializes the session with the IRC server by introducing ourselves and 
+        joining the specified channel.
+        """
         self.logSend("NICK {}\r\n".format(self._nick).encode("utf-8"))
 
         ##change this to be a randomized name per bot, note nick is their identifying feature,
@@ -72,14 +87,19 @@ class Bot:
         self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
 
     def debugLogResponse(self, prefix, command, args):
-        """ """
+        """ 
+        logs a single command's prefix, command, and arguments for debugging purposes. 
+        """
         print("prefix: {0}".format(prefix))
         print("command: {0}".format(command))
         print("args: {0}".format(args))
 
 
     def doWork(self):
-        """ """
+        """ 
+        Handles the receive/response loop by introducing the bot to the server, then handles
+        responses to basic commands
+        """
         self.initConnection()
 
         responses = self.logRecv()
@@ -100,7 +120,15 @@ class Bot:
             responses = self.logRecv()
 
     def pickNewName(self):
-        """ set new name """
+        """ 
+        set a new name for the bot. Called on startup and repeatedly if name is taken.
+
+        TODO: if we desire more than 1872 possible names, we should add some method of logging how
+        many failed name attempts have been made and introduce some level of randomness at this point.
+
+        If we do not care about the human readability of the names, a small randomized alphanumeric
+        will suffice
+        """
         first = ["commander", "prince", "princess", "lord", "king", "queen", "mr", "keeper", "warden", "governor", "mayor", "president"]
         middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey", "pork"]
         last = ["toes", "fingers", "chef", "herder", "chop", "shepherd", "buns", "pickle", "fiend", "burger", "milk", "juice"]
