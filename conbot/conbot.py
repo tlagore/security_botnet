@@ -173,7 +173,25 @@ class ConBot:
             msg = "PRIVMSG {0} :{1} {2}\r\n".format(bot, secret, command).encode('utf-8')
             self.logSend(msg)
 
-        
+    def move(self, commandParts):
+        if len(self._bots) == 0:
+            print("!! No known bots. Use the [status] command to find bots")
+        else:
+            if len(commandParts) != 4:
+                print("Invalid command syntax. Syntax is: move <host> <port> <channel>")
+            else:
+                try:
+                    command = commandParts[0]
+                    host = commandParts[1]
+                    port = int(commandParts[2])
+                    channel = commandParts[3]
+                    for bot in self._bots:
+                        msg = "PRIVMSG {0} :{1} {2} {3} {4} {5}\r\n".format(bot, secret, command, host, port, channel).encode('utf-8')
+                        self.logSend(msg)
+                        
+                except ValueError:
+                    print("Invalid port number. Must be between 1 and 65535.")
+            
     def __del__(self):
         try:
             self._socket.close()
@@ -204,7 +222,9 @@ def handleCommands(controller):
         elif commandParts[0] == "shutdown":
             print("shutdown!")
             controller.shutdown(commandParts[0])
-            break;
+        elif commandParts[0] == "move":
+            print("move bots!")
+            controller.move(commandParts)
         else:
             print("Invalid command!");
             

