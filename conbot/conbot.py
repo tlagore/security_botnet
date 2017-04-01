@@ -16,6 +16,7 @@ class ConBot:
         self._port = port        
         self._secret = secret
         self._running = True
+        self._bots = []
 
         self._socket = socket.socket()
         self._socket.settimeout(5)
@@ -87,6 +88,15 @@ class ConBot:
                         #username taken
                         self._nick = self._nick + str(randomint(1, 1000))
                         self.initConnection()
+                    elif command == "PRIVMSG":
+                        sender = prefix[:prefix.index("!")]
+                        channel = args[0]
+                        msg = args[1]
+
+                        if msg == "what is my purpose?":
+                            if not self.knownBot(sender):
+                                self._bots.append(sender)
+                            
                 try:
                     responses = self.logRecv()
                 except socket.timeout:
@@ -99,9 +109,22 @@ class ConBot:
             print("!! response loop ending")
             print(traceback.format_exc())
 
+
+    def knownBot(self, botName):
+        for bot in self._bots:
+            if bot == botName:
+                return True
+
+        return False
+            
+
     def status(self):
-        msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "hello").encode('utf-8')
+        msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
         self.logSend(msg)
+        print("Waiting for bot responses...")        
+        time.sleep(2)
+
+        print("{0} bots active.".format(len(self._bots)))
 
     def shutdown(self):
         self._running = False
