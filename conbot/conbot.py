@@ -4,9 +4,19 @@ import time
 import threading
 import traceback
 
+
+class colors:
+    OAKGREEN = '\033[92m'
+    BLUE = '\033[1;34m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+    
 class ConBot:
     def __init__(self, server, name, channel, port, secret):
         self._server = server
@@ -124,9 +134,9 @@ class ConBot:
         print("Waiting for bot responses...")        
         time.sleep(.5)
 
-        print("Found {0} bots.".format(len(self._bots)))
+        print("{0}Found {1} bots.{2}".format(colors.BLUE, len(self._bots), colors.ENDC))
         for bot in self._bots:
-            print("{0}".format(bot))
+            print("{0}{1}{2}".format(colors.WARNING, bot, colors.ENDC))
 
     def shutdown(self):
         self._running = False
@@ -142,6 +152,9 @@ def handleCommands(controller):
     """
     
     """
+
+    print("Enter command: ", end = '')
+    sys.stdout.flush()
     command = sys.stdin.readline()
     while command != '':
         command = command.strip("\r\n")
@@ -161,7 +174,9 @@ def handleCommands(controller):
             break;
         else:
             print("Invalid command!");
-        
+            
+        print("Enter command: ", end = '')
+        sys.stdout.flush()
         command=sys.stdin.readline()
     
 
