@@ -3,6 +3,7 @@ import socket
 import time
 import threading
 import traceback
+import random
 
 
 class colors:
@@ -93,7 +94,7 @@ class ConBot:
                         self.logSend("JOIN {}\r\n".format(self._channel).encode("utf-8"))
                     elif command == "433":
                         #username taken
-                        self._nick = self._nick + str(randomint(1, 10))
+                        self._nick = self._nick + str(random.randint(1, 10))
                         self.initConnection()
                     elif command == "QUIT":
                         #TODO check if it was one of our bots and remove from bot list
