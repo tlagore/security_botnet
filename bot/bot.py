@@ -24,6 +24,8 @@ class Bot:
         self._nick = ""
         self._secret = secret
         self._shutdown = False
+
+        self._trigger = "where mah boyz at?"
         
         self.pickNewName()
         
@@ -146,8 +148,15 @@ class Bot:
                         channel = args[0]
                         msg = args[1]
 
-                        msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heard that fella").encode('utf-8')
-                        self.logSend(msg)
+                        sender = sender[:sender.index("!")]
+
+                        eprint("message from {0}".format(sender))
+
+                        if msg == "heyyy what up mah glip glops?":
+                            eprint("yoyoyo")
+                            response = "PRIVMSG {0} :{1}\r\n".format(sender, "what is my purpose?").encode('utf-8')
+                            self.logSend(response)
+                            
                     elif command == "ERROR":                        
                         eprint("!! Server sent error, could be connecting too quick, wait 10 seconds..")
                         sys.stdout.flush()
