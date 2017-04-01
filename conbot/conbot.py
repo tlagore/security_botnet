@@ -122,9 +122,11 @@ class ConBot:
         msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
         self.logSend(msg)
         print("Waiting for bot responses...")        
-        time.sleep(2)
+        time.sleep(.5)
 
-        print("{0} bots active.".format(len(self._bots)))
+        print("Found {0} bots.".format(len(self._bots)))
+        for bot in self._bots:
+            print("{0}".format(bot))
 
     def shutdown(self):
         self._running = False

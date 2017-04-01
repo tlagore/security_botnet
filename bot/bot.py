@@ -11,6 +11,7 @@ def eprint(*args, **kwargs):
 
 class colors:
     OAKGREEN = '\033[92m'
+    BLUE = '\033[1;34m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
@@ -84,7 +85,7 @@ class Bot:
         """
 
         msg = bytes(msg)
-        print("--> sending: {0}{1}{2}".format(colors.OAKGREEN, msg, colors.ENDC))
+        print("--> sending: {0}{1}{2}".format(colors.BLUE, msg, colors.ENDC))
         self._socket.send(msg)
         
     def logRecv(self):
@@ -97,7 +98,7 @@ class Bot:
         If only one message is received, the array will be of size 1
         """
         response = self._socket.recv(1024).decode("utf-8")
-        print("<-- received: " + str(response))
+        print("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
