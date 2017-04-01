@@ -98,6 +98,9 @@ class ConBot:
                         #username taken
                         self._nick = self._nick + str(randomint(1, 1000))
                         self.initConnection()
+                    elif command == "QUIT":
+                        #TODO check if it was one of our bots and remove from bot list
+                        pass
                     elif command == "PRIVMSG":
                         sender = prefix[:prefix.index("!")]
                         channel = args[0]
@@ -129,6 +132,7 @@ class ConBot:
             
 
     def status(self):
+        self._bots = []
         msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
         self.logSend(msg)
         print("Waiting for bot responses...")        
