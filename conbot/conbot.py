@@ -252,9 +252,7 @@ if __name__ == "__main__":
             conbot.start()
 
             handleCommands(controller)
-
-            print(conbot.isAlive())
-            
+ 
             conbot.join()
         except ValueError:
             eprint("Invalid port number. Port must be from 1-65535")

