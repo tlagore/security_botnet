@@ -269,9 +269,9 @@ class Bot:
         If we do not care about the human readability of the names, a small randomized alphanumeric
         will suffice
         """
-        first = ["commander", "prince", "princess", "lord", "king", "queen", "mr", "keeper", "warden", "governor", "mayor", "president"]
-        middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey", "pork", "of"]
-        last = ["toes", "fingers", "chef", "herder", "chop", "shepherd", "buns", "pickle", "fiend", "burger", "milk", "juice"]
+        first = ["commander", "prince", "princess", "lord", "king", "queen", "mr", "keeper", "warden", "governor", "mayor", "president", "lil", "admin"]
+        middle = ["toad", "pie", "skillet", "cake", "hamster", "jock", "rage", "fun", "gander", "goose", "bug", "turkey", "pork", "squanch", "plumbus", "meander"]
+        last = ["toes", "fingers", "chef", "herder", "chop", "shepherd", "buns", "pickle", "fiend", "burger", "milk", "juice", "thighs", "moose"]
 
         firstInd = random.randint(0, len(first) - 1)
         middleInd = random.randint(0, len(middle) - 1)
