@@ -28,8 +28,6 @@ class Bot:
         self._shutdown = False
 
         self._attackcount = 0
-
-        self._trigger = "where mah boyz at?"
         
         self.pickNewName()
         

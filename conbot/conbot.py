@@ -108,6 +108,7 @@ class ConBot:
                     elif command == "QUIT":
                         sender = prefix[:prefix.index("!")]
                         if self.knownBot(sender):
+                            print("Bot leaving: {0}".format(sender))
                             cnt = 0
                             for bot in self._bots:
                                 if bot == sender:
@@ -130,6 +131,15 @@ class ConBot:
                                 print("Total: {0} bots moved".format(self._botquit))
                                 self._botsmoving = False
                                 self._botquit = 0
+                    elif command == "JOIN":
+                        sender = prefix[:prefix.index("!")]
+                        if sender == self._nick:
+                            msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
+                        else:
+                            msg = "PRIVMSG {0} :{1}\r\n".format(sender, "heyyy what up mah glip glops?").encode('utf-8')
+                        
+                        self.logSend(msg)
+                        
                     elif command == "PRIVMSG":
                         sender = prefix[:prefix.index("!")]
                         channel = args[0]
@@ -138,6 +148,7 @@ class ConBot:
                         if msg == "what is my purpose?":
                             if not self.knownBot(sender):
                                 self._bots.append(sender)
+                                print("Bot found: {0}".format(sender))
                 
                         elif msg == "attack successful":
                             self._atksucc = self._atksucc + 1
@@ -259,8 +270,6 @@ def handleCommands(controller):
     
     """
 
-    print("Enter command: ", end = '')
-    sys.stdout.flush()
     command = sys.stdin.readline()
     while command != '':
         command = command.strip("\r\n")
@@ -280,8 +289,6 @@ def handleCommands(controller):
         else:
             print("Invalid command!");
             
-        print("Enter command: ", end = '')
-        sys.stdout.flush()
         command=sys.stdin.readline()
     
 
