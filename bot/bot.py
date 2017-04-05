@@ -16,6 +16,29 @@ class colors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
+
+
+class TimerThread(threading.Thread):
+    def __init__(self, time, timeEnd, function):
+        self._stopped = False
+        self._time = time
+        self._function = function
+
+        #tells the timer that there is a range on the time, if this is set to none - it will
+        #iterate every "time" seconds. Otherwise, it will iterate between time and timeEnd seconds
+        self._timeEnd = timeEnd
+        threading.Thread.__init__(self)
+
+    def run(self):
+
+        while not self._stopped:
+            self._function()
+            timeToSleep = self._time if not self._timeEnd else random.randint(self._time, self._timeEnd)
+            time.sleep(timeToSleep)
+
+    def stop(self):
+        self._stopped = True
+        
     
 class Bot:
     def __init__(self, server, channel, port, secret):
@@ -26,6 +49,7 @@ class Bot:
         self._nick = ""
         self._secret = secret
         self._shutdown = False
+        self._naturalTimer = None # TimerThread(5, self.actNatural) #threading.Timer(5, self.actNatural)
 
         self._attackcount = 0
         
@@ -167,9 +191,9 @@ class Bot:
             #other exception, continue to reconnect
             eprint("Error encountered: ")
             eprint(traceback.format_exc())
-            eprint("Waiting 10 seconds before reconnect...")
+            eprint("Waiting 5 seconds before reconnect...")
             sys.stdout.flush()
-            time.sleep(10)
+            time.sleep(5)
             
 
         #if we haven't received the shutdown command, boot 'er back up
@@ -179,7 +203,6 @@ class Bot:
             print("{0}Received shutdown signal{1}".format(colors.FAIL, colors.ENDC))
 
     def parsePrivMsg(self, sender, msg):
-    
         if msg == "heyyy what up mah glip glops?":
             response = "PRIVMSG {0} :{1}\r\n".format(sender, "what is my purpose?").encode('utf-8')
             self.logSend(response)
@@ -238,7 +261,36 @@ class Bot:
                             eprint("Ignoring move command. Port malformed.")   
                 elif command == "shutdown":
                     self._shutdown = True
+                elif command == "actnatural":
+                    if msgParts[2] == "true":
+                        eprint("Acting natural..")
+                        self._naturalTimer = TimerThread(time=5, timeEnd=10, function=self.actNatural)
+                        self._naturalTimer.start()
+                        #self._naturalTimer.start()
+                    elif msgParts[2] == "false":
+                        eprint("Stopped acting natural..")
+                        if self._naturalTimer:
+                            self._naturalTimer.stop()
+                            #self._naturalTimer.cancel()
+                        else:
+                            eprint("Act natural timer was not setting. Ignoring command")
+                    else:
+                        eprint("Ignoring command. Malformed boolean.")
 
+
+    def actNatural(self):
+        phrases = ["kapa kapa", "oyoyoyoyoyoy", "RUINED IT!!", "Saved it!!",
+                   "Wat time is it?", "me gusta", "now THAT is funny.", "please be kind",
+                   "wow im offended", "i dont care if ur offended, this is who i am",
+                   "does anyone know how to get to falador?", "buying gf 248gp",
+                   "ya manky chav", "WOWWWW", "how do i mute someone?", "press alt+f4",
+                   "wow you guys are mean"]
+
+        phrase = phrases[random.randint(0, len(phrases) - 1)]
+        response = "PRIVMSG {0} :{1}\r\n".format(self._channel, phrase).encode('utf-8')
+        self.logSend(response)
+        
+        
 
     def performAttack(self, host, port, sender):
         atksock = socket.socket()
