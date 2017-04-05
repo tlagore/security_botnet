@@ -10,13 +10,14 @@ import re
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+'''
 class colors:
     OAKGREEN = '\033[92m'
     BLUE = '\033[1;34m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
-
+'''
 
 class TimerThread(threading.Thread):
     """ TimerThread accepts a time interval, a time end interval and a function.
