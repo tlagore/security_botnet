@@ -66,13 +66,13 @@ class ConBot:
     def logSend(self, msg):
         msg = bytes(msg)
         if self._debug:
-            eprint("--> sending: {0}{1}{2}".format(colors.BLUE, str(msg), colors.ENDC))
+            eprint("--> sending: {0}".format(str(msg)))
         self._socket.send(msg)
 
     def logRecv(self):
         response = self._socket.recv(1024).decode("utf-8")
         if self._debug:
-            eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
+            eprint("<-- received: {0}".format(response))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
@@ -138,6 +138,7 @@ class ConBot:
                     elif command == "JOIN":
                         sender = prefix[:prefix.index("!")]
                         if sender == self._nick:
+                            print("Connected to channel {0} on server {1}".format(self._channel, self._server))
                             msg = "PRIVMSG {0} :{1}\r\n".format(self._channel, "heyyy what up mah glip glops?").encode('utf-8')
                         else:
                             msg = "PRIVMSG {0} :{1}\r\n".format(sender, "heyyy what up mah glip glops?").encode('utf-8')
@@ -232,9 +233,9 @@ class ConBot:
         print("Waiting for bot responses...")        
         time.sleep(.5)
 
-        print("{0}Found {1} bots.{2}".format(colors.BLUE, len(self._bots), colors.ENDC))
+        print("Found {0} bot(s).".format(len(self._bots)))
         for bot in self._bots:
-            print("{0}{1}{2}".format(colors.WARNING, bot, colors.ENDC))
+            print("{0}".format(bot))
 
     def quit(self):
         self._running = False
@@ -308,7 +309,7 @@ def handleCommands(controller):
 
 if __name__ == "__main__":
 
-    if (len(sys.argv) == 6 and sys.argv[5] != "debug") and len(sys.argv) != 5:
+    if (len(sys.argv) == 6 and sys.argv[5] != "debug") or len(sys.argv) != 5:
         eprint("Invalid usage. Usage: ")
         eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase> [debug]")
     else:
