@@ -125,9 +125,11 @@ class ConBot:
                             if self._botsquitting and self._botqcount == 0:
                                 print("Total: {0} bots shut down".format(self._botquit))
                                 self._botsquitting = False
+                                self._botquit = 0
                             if self._botsmoving and self._botqcount == 0:
                                 print("Total: {0} bots moved".format(self._botquit))
                                 self._botsmoving = False
+                                self._botquit = 0
                     elif command == "PRIVMSG":
                         sender = prefix[:prefix.index("!")]
                         channel = args[0]
@@ -143,8 +145,13 @@ class ConBot:
                             if (self._atksucc + self._atkfail) == self._botcount:
                                 print("Total: {0} successful, {1} unsuccessful".format(self._atksucc, self._atkfail))
                         elif msg == "attack failed, no such hostname":
-                            self._atkfail = self.atkfail + 1
+                            self._atkfail = self._atkfail + 1
                             print("{0}: {1}".format(sender,"attack failed, no such hostname"))
+                            if (self._atksucc + self._atkfail) == self._botcount:
+                                print("Total: {0} successful, {1} unsuccessful".format(self._atksucc, self._atkfail))
+                        elif msg == "attack failed, invalid port":
+                            self._atkfail = self._atkfail + 1
+                            print("{0}: {1}".format(sender,"attack failed, invalid port"))
                             if (self._atksucc + self._atkfail) == self._botcount:
                                 print("Total: {0} successful, {1} unsuccessful".format(self._atksucc, self._atkfail))
 

