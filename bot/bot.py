@@ -288,11 +288,11 @@ class Bot:
         
         # if the host does not match the ip regex
         if not re.match(ipFormat, host):
-            (h, aliaslist, ip) = socket.gethostbyname_ex(host)
+            ip = socket.gethostbyname(host)
             
             if len(ip) > 0:
-                print("!! {0} is - aliases:{1} ips:{2}".format(host, aliaslist, ip))
-                host_ip = ip[0]
+                print("!! {0} is ip:{1}".format(host, ip))
+                host_ip = ip
             else:
                 eprint("Cannot resolve IP")
         else:
@@ -321,4 +321,3 @@ if __name__ == "__main__":
             eprint("Exitting bot...")
             
     
-    #bot = Bot("127.0.0.1", "#channel1", 6667)
