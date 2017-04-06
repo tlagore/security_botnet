@@ -309,7 +309,7 @@ def handleCommands(controller):
 
 if __name__ == "__main__":
 
-    if (len(sys.argv) == 6 and sys.argv[5] != "debug") or len(sys.argv) != 5:
+    if (len(sys.argv) == 6 and sys.argv[5] != "debug") and len(sys.argv) != 5:
         eprint("Invalid usage. Usage: ")
         eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase> [debug]")
     else:
