@@ -127,7 +127,7 @@ class Bot:
         """
 
         msg = bytes(msg)
-        eprint("--> sending: {0}{1}{2}".format(colors.BLUE, msg, colors.ENDC))
+        eprint("--> sending: {0}".format(msg))
         self._socket.send(msg)
         
     def logRecv(self):
@@ -140,7 +140,7 @@ class Bot:
         If only one message is received, the array will be of size 1
         """
         response = self._socket.recv(1024).decode("utf-8")
-        eprint("<-- received: {0}{1}{2}".format(colors.WARNING, response, colors.ENDC))
+        eprint("<-- received: {0}".format(response))
         responses = response.split("\r\n")
         return responses[:len(responses) - 1]
 
@@ -217,7 +217,7 @@ class Bot:
         if not self._shutdown:
             self.connectAndRun()
         else:
-            print("{0}Received shutdown signal{1}".format(colors.FAIL, colors.ENDC))
+            print("Received shutdown signal")
 
     def parsePrivMsg(self, sender, msg):
         if msg == self._trigger:
