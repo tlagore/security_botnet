@@ -279,6 +279,7 @@ class Bot:
                             eprint("Ignoring move command. Port malformed.")   
                 elif command == "shutdown":
                     self._shutdown = True
+                    self._naturalTimer.stop()
                 elif command == "actnatural":
                     # tells the bots to start or stop acting natural
                     if msgParts[2] == "true":
