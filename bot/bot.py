@@ -40,9 +40,10 @@ class TimerThread(threading.Thread):
 
     def run(self):
         while not self._stopped:
-            self._function()
             timeToSleep = self._time if not self._timeEnd else random.randint(self._time, self._timeEnd)
             time.sleep(timeToSleep)
+            if not self._stopped:
+                self._function()
 
     def stop(self):
         self._stopped = True
