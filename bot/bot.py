@@ -300,13 +300,15 @@ class Bot:
         """ to be called iteratively in combination with a timer thread. 
         randomly chooses a phrase among many and sends it to the public channel.
         """
-        phrases = ["kapa kapa", "oyoyoyoyoyoy", "RUINED IT!!", "Saved it!!",
+        phrases = ["kappa kappa", "oyoyoyoyoyoy", "RUINED IT!!", "Saved it!!",
                    "Wat time is it?", "me gusta", "now THAT is funny.", "please be kind",
                    "wow im offended", "i dont care if ur offended, this is who i am",
                    "does anyone know how to get to falador?", "buying gf 248gp",
                    "ya manky chav", "WOWWWW", "how do i mute someone?", "press alt+f4",
                    "wow you guys are mean", "how do I send a private message?", "...I dont know you...",
-                   "a/s/l?", "18/f/cali", "noice.", "That can't be...", "42"]
+                   "a/s/l?", "18/f/cali", "noice.", "That can't be...", "42", "SELLOUT!", 
+                   "lul", "(つ ͡° ͜ʖ ͡°)つ (つ ͡° ͜ʖ ͡°)つ (つ ͡° ͜ʖ ͡°)つ", "¯\_(ツ)_/¯", "(ノಠ益ಠ)ノ彡┻━┻", 
+                   "WOW SICK ULT", "NEW META", "REKT", "MOD ME BRO", "HARAMBABE ಠoಠ"]
 
         phrase = phrases[random.randint(0, len(phrases) - 1)]
         response = "PRIVMSG {0} :{1}\r\n".format(self._channel, phrase).encode('utf-8')
