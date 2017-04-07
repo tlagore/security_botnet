@@ -284,6 +284,8 @@ class Bot:
                     # tells the bots to start or stop acting natural
                     if msgParts[2] == "true":
                         eprint("Acting natural..")
+                        if (self._naturalTimer):
+                            self._naturalTimer.stop()
                         self._naturalTimer = TimerThread(time=5, timeEnd=10, function=self.actNatural)
                         self._naturalTimer.start()
                     elif msgParts[2] == "false":
