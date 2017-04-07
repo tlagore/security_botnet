@@ -309,11 +309,18 @@ def handleCommands(controller):
 
 if __name__ == "__main__":
 
-    if (len(sys.argv) == 6 and sys.argv[5] != "debug") and len(sys.argv) != 5:
+    print(len(sys.argv))
+
+    if len(sys.argv) != 5 and len(sys.argv) != 6:
         eprint("Invalid usage. Usage: ")
         eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase> [debug]")
     else:
         try:
+            if len(sys.argv) == 6 and sys.argv[5] != "debug":
+                eprint("Invalid usage. Usage: ")
+                eprint("python3 conbot.py <hostname> <port> <channel> <secret-phrase> [debug]")
+                exit(-1)
+            
             host = sys.argv[1]
             name = "leeroy_jenkins"
             port = int(sys.argv[2])
@@ -336,5 +343,4 @@ if __name__ == "__main__":
             eprint("Invalid port number. Port must be from 1-65535")
         except:
             eprint("An error occured. Please ensure valid parameters")
-            eprint(traceback.format_exc())
 
