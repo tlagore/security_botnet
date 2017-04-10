@@ -1,4 +1,4 @@
-import sys
+1import sys
 import socket
 import time
 import threading
@@ -308,8 +308,6 @@ def handleCommands(controller):
     
 
 if __name__ == "__main__":
-
-    print(len(sys.argv))
 
     if len(sys.argv) != 5 and len(sys.argv) != 6:
         eprint("Invalid usage. Usage: ")
