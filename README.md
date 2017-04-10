@@ -17,7 +17,7 @@ The Controller will check the IRC server for available bots and issue global com
 
 ## Controller:
   Can be found in the conbot folder in the project directory. To run it:
-    python3 conbot.py hostname port channel secret-phrase [debug]
+    - python3 conbot.py hostname port channel secret-phrase [debug]
     
     - Host and port refer to the IRC server to connect to
     - Channel is the irc channel to conenct to
@@ -37,7 +37,7 @@ The Controller will check the IRC server for available bots and issue global com
                     of a twitch chat would!
 ## Bot:
   Can be found in the bot folder in the project directory. To run it:
-    python3 bot.py hostname port channel secret_phrase
+    - python3 bot.py hostname port channel secret_phrase
     
     - Host and port refer to the IRC server to connect to
     - Channel is the irc channel to conenct to
