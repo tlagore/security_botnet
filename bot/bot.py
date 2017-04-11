@@ -91,7 +91,7 @@ class Bot:
                 self._socket.connect((self._server, self._port))
                 connected = True
                 eprint("!! Connected to server {0} on port {1}".format(self._server, self._port))
-            finally:
+            except:
                 if connected != True:
                     eprint("!! Error connecting. Trying again in 5 seconds.")
                     sys.stdout.flush()
