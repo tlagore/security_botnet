@@ -6,7 +6,7 @@ Assignment 5
 
 # Authors
 
-Tyrone Lagore T01 (10151950) James MacIsaac T03 (10063078)
+Tyrone Lagore T01 James MacIsaac
 
 # Desc
 
